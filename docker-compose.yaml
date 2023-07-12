@@ -143,7 +143,7 @@ services:
 
 
   jenkins:
-    image: jenkins/jenkins:lts
+    image: jenkins/jenkins
     container_name: jenkins
     restart: always
     ports:
