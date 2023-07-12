@@ -143,7 +143,7 @@ services:
 
 
   jenkins2:
-    image: jenkins
+    image: jenkins/jenkins:lts
     container_name: jenkins2
     restart: always
     ports:
@@ -162,7 +162,9 @@ services:
     hostname: nexus
     image: sonatype/nexus3
     ports:
-      - "9003:9003"
+      - 9003:9003
+    volumes:
+      - nexusVolume:/nexus-data sonatype/nexus3
     networks:
       - cicd
 
