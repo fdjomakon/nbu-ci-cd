@@ -63,7 +63,7 @@ services:
       - ATL_JDBC_USER=jira
       - ATL_JDBC_PASSWORD=jira
       - ATL_DB_DRIVER=org.postgresql.Driver
-      - ATL_DB_TYPE=postgresql
+      - ATL_DB_TYPE=postgres72
       - JVM_MINIMUM_MEMORY=1024m
       - JVM_MAXIMUM_MEMORY=1024m
     volumes:
@@ -147,7 +147,7 @@ services:
     container_name: jenkins
     restart: always
     ports:
-      - 8181:8181
+      - 8888:8888
       - 50000:50000
     volumes:
       - jenkinsVolume:/var/jenkins_home
@@ -156,6 +156,7 @@ services:
       - cicd
     depends_on:
       - sonarqube
+
 
 
 networks:
