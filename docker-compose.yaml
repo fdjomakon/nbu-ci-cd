@@ -54,9 +54,9 @@ services:
     networks: 
       - cicd
 
-  jira:
+  jira2:
     image: atlassian/jira-software
-    container_name: jira
+    container_name: jira2
     restart: always
     environment:
       - ATL_JDBC_URL=jdbc:postgresql://jiradb:5432/jiradb
@@ -67,8 +67,8 @@ services:
       - JVM_MINIMUM_MEMORY=1024m
       - JVM_MAXIMUM_MEMORY=1024m
     volumes:
-      - jiraVolume:/var/atlassian/application-data/jira
-      - jiraInstallVolume:/opt/atlassian/
+      - jira2Volume:/var/atlassian/application-data/jira
+      - jira2InstallVolume:/opt/atlassian/
     ports:
       - 8080:8080
     networks: 
@@ -164,8 +164,8 @@ networks:
     driver: bridge
 
 volumes:
-  jiraVolume:
-  jiraInstallVolume:
+  jira2Volume:
+  jira2InstallVolume:
   confluenceVolume:
   confluenceInstallVolume:
   bitbucketVolume:
