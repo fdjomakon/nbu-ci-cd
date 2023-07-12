@@ -1,0 +1,48 @@
+version: '2'
+services:
+  jira:
+    image: atlassian/jira-software
+    container_name: jira
+    restart: always
+    environment:
+      - VIRTUAL_HOST=jira.example.com
+      - VIRTUAL_PORT=8080
+      - ATL_PROXY_NAME=jira.example.com
+    volumes:
+      - jiraVolume:/var/atlassian/application-data/jira
+      - jiraInstallVolume:/opt/atlassian/
+    network_mode: bridge
+
+  confluence:
+    image: atlassian/confluence-server
+    container_name: confluence
+    restart: always
+    environment:
+      - VIRTUAL_HOST=confluence.example.com
+      - VIRTUAL_PORT=8090
+      - ATL_PROXY_NAME=confluence.example.com
+    volumes:
+      - confluenceVolume:/var/atlassian/application-data/confluence
+      - confluenceInstallVolume:/opt/atlassian/
+    network_mode: bridge
+
+  bitbucket:
+    image: atlassian/bitbucket-server
+    container_name: bitbucket
+    restart: always
+    environment:
+      - VIRTUAL_HOST=bitbucket.example.com
+      - VIRTUAL_PORT=7990
+      - SERVER_PROXY_NAME=bitbucket.example.com
+    volumes:
+      - bitbucketVolume:/var/atlassian/application-data/bitbucket
+      - bitbucketInstallVolume:/opt/atlassian/
+    network_mode: bridge
+
+volumes:
+  jiraVolume:
+  jiraInstallVolume:
+  confluenceVolume:
+  confluenceInstallVolume:
+  bitbucketVolume:
+  bitbucketInstallVolume:
