@@ -5,39 +5,79 @@ services:
     container_name: jira
     restart: always
     environment:
-      - VIRTUAL_HOST=jira.example.com
-      - VIRTUAL_PORT=8080
-      - ATL_PROXY_NAME=jira.example.com
+      - ATL_JDBC_URL=jdbc:postgresql://jiradb:5432/jiradb
+      - ATL_JDBC_USER=jira
+      - ATL_JDBC_PASSWORD=jira
+      - ATL_DB_DRIVER=org.postgresql.Driver
+      - ATL_DB_TYPE=postgres72
+      - ATL_DB_SCHEMA_NAME=public
+      - JVM_MINIMUM_MEMORY=1024m
+      - JVM_MAXIMUM_MEMORY=1024m
     volumes:
       - jiraVolume:/var/atlassian/application-data/jira
       - jiraInstallVolume:/opt/atlassian/
+    ports:
+      - 8080:8080
     network_mode: bridge
+  
+  jiradb:
+    image: postgres:11
+    environment:
+      - POSTGRES_PASSWORD=jira
+      - POSTGRES_DB=jiradb
+      - POSTGRES_USER=jira
+      - POSTGRES_ENCODING=UNICODE
+      - POSTGRES_COLLATE=en_US.UTF-8
+      - POSTGRES_COLLATE_TYPE=en_US.UTF-8
+    volumes:
+      - ./volumes/postgres/jiradb/data:/var/lib/postgresql/data
+    network: bridge
 
   confluence:
     image: atlassian/confluence-server
     container_name: confluence
     restart: always
     environment:
-      - VIRTUAL_HOST=confluence.example.com
-      - VIRTUAL_PORT=8090
-      - ATL_PROXY_NAME=confluence.example.com
+      - ATL_JDBC_URL=jdbc:postgresql://confluencedb:5432/confluencedb
+      - ATL_JDBC_USER=confluence
+      - ATL_JDBC_PASSWORD=confluence
+      - ATL_DB_DRIVER=org.postgresql.Driver
+      - ATL_DB_TYPE=postgres72
+      - ATL_DB_SCHEMA_NAME=public
+      - JVM_MINIMUM_MEMORY=1024m
+      - JVM_MAXIMUM_MEMORY=1024m
     volumes:
       - confluenceVolume:/var/atlassian/application-data/confluence
       - confluenceInstallVolume:/opt/atlassian/
+    ports:
+      - 8090:8090
     network_mode: bridge
+
+  confluencedb:
+    image: postgres:11
+    environment:
+      - POSTGRES_PASSWORD=confluence
+      - POSTGRES_DB=confluencedb
+      - POSTGRES_USER=confluence
+      - POSTGRES_ENCODING=UNICODE
+      - POSTGRES_COLLATE=en_US.UTF-8
+      - POSTGRES_COLLATE_TYPE=en_US.UTF-8
+    volumes:
+      - ./volumes/postgres/confluencedb/data:/var/lib/postgresql/data
+    network: bridge
 
   bitbucket:
     image: atlassian/bitbucket-server
     container_name: bitbucket
     restart: always
-    environment:
-      - VIRTUAL_HOST=bitbucket.example.com
-      - VIRTUAL_PORT=7990
-      - SERVER_PROXY_NAME=bitbucket.example.com
     volumes:
       - bitbucketVolume:/var/atlassian/application-data/bitbucket
       - bitbucketInstallVolume:/opt/atlassian/
+    ports:
+      - 7990:7990
     network_mode: bridge
+  
+
 
 volumes:
   jiraVolume:
