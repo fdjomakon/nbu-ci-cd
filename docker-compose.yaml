@@ -142,21 +142,29 @@ services:
       - cicd
 
 
-  jenkins:
-    image: jenkins/jenkins
-    container_name: jenkins
+  jenkins2:
+    image: jenkins
+    container_name: jenkins2
     restart: always
     ports:
       - 8888:8888
       - 50000:50000
     volumes:
-      - jenkinsVolume:/var/jenkins_home
+      - jenkins2Volume:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
     networks: 
       - cicd
     depends_on:
       - sonarqube
 
+
+  nexus:
+    hostname: nexus
+    image: sonatype/nexus3
+    ports:
+      - "9003:9003"
+    networks:
+      - cicd
 
 
 networks:
@@ -173,4 +181,4 @@ volumes:
   sonarConfVolume:
   sonarDataVolume:
   sonarExtensionsVolume:
-  jenkinsVolume:
+  jenkins2Volume:
