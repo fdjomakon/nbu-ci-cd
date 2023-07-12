@@ -184,3 +184,4 @@ volumes:
   sonarDataVolume:
   sonarExtensionsVolume:
   jenkins2Volume:
+  nexusVolume:
