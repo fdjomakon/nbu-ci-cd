@@ -1,0 +1,6 @@
+**volumes
+debug.yml
+*.pem
+*.pub
+*.rsa
+*.env

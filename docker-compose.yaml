@@ -1,62 +1,9 @@
 version: '2'
 services:
-  jira:
-    image: atlassian/jira-software
-    container_name: jira
-    restart: always
-    environment:
-      - ATL_JDBC_URL=jdbc:postgresql://jiradb:5432/jiradb
-      - ATL_JDBC_USER=jira
-      - ATL_JDBC_PASSWORD=jira
-      - ATL_DB_DRIVER=org.postgresql.Driver
-      - ATL_DB_TYPE=postgres72
-      - ATL_DB_SCHEMA_NAME=public
-      - JVM_MINIMUM_MEMORY=1024m
-      - JVM_MAXIMUM_MEMORY=1024m
-    volumes:
-      - jiraVolume:/var/atlassian/application-data/jira
-      - jiraInstallVolume:/opt/atlassian/
-    ports:
-      - 8080:8080
-    network_mode: bridge
-  
-  jiradb:
-    image: postgres:11
-    environment:
-      - POSTGRES_PASSWORD=jira
-      - POSTGRES_DB=jiradb
-      - POSTGRES_USER=jira
-      - POSTGRES_ENCODING=UNICODE
-      - POSTGRES_COLLATE=en_US.UTF-8
-      - POSTGRES_COLLATE_TYPE=en_US.UTF-8
-    volumes:
-      - ./volumes/postgres/jiradb/data:/var/lib/postgresql/data
-    network: bridge
-
-
-
-  confluence:
-    image: atlassian/confluence-server
-    container_name: confluence
-    restart: always
-    environment:
-      - ATL_JDBC_URL=jdbc:postgresql://confluencedb:5432/confluencedb
-      - ATL_JDBC_USER=confluence
-      - ATL_JDBC_PASSWORD=confluence
-      - ATL_DB_DRIVER=org.postgresql.Driver
-      - ATL_DB_TYPE=postgres72
-      - ATL_DB_SCHEMA_NAME=public
-      - JVM_MINIMUM_MEMORY=1024m
-      - JVM_MAXIMUM_MEMORY=1024m
-    volumes:
-      - confluenceVolume:/var/atlassian/application-data/confluence
-      - confluenceInstallVolume:/opt/atlassian/
-    ports:
-      - 8090:8090
-    network_mode: bridge
 
   confluencedb:
     image: postgres:11
+    container_name: confluencedb
     environment:
       - POSTGRES_PASSWORD=confluence
       - POSTGRES_DB=confluencedb
@@ -66,9 +13,89 @@ services:
       - POSTGRES_COLLATE_TYPE=en_US.UTF-8
     volumes:
       - ./volumes/postgres/confluencedb/data:/var/lib/postgresql/data
-    network: bridge
+    network_mode: bridge
+    networks: 
+      - cicd
+  
+  confluence:
+    image: atlassian/confluence-server
+    container_name: confluence
+    restart: always
+    environment:
+      - ATL_JDBC_URL=jdbc:postgresql://confluencedb:5432/confluencedb
+      - ATL_JDBC_USER=confluence
+      - ATL_JDBC_PASSWORD=confluence
+      - ATL_DB_DRIVER=org.postgresql.Driver
+      - ATL_DB_TYPE=postgresql
+      - JVM_MINIMUM_MEMORY=1024m
+      - JVM_MAXIMUM_MEMORY=1024m
+    volumes:
+      - confluenceVolume:/var/atlassian/application-data/confluence
+      - confluenceInstallVolume:/opt/atlassian/
+    ports:
+      - 8090:8090
+    network_mode: bridge
+    networks: 
+      - cicd
+    depends_on:
+      - confluencedb
 
+  
+  jiradb:
+    image: postgres:11
+    container_name: jiradb
+    environment:
+      - POSTGRES_PASSWORD=jira
+      - POSTGRES_DB=jiradb
+      - POSTGRES_USER=jira
+      - POSTGRES_ENCODING=UNICODE
+      - POSTGRES_COLLATE=en_US.UTF-8
+      - POSTGRES_COLLATE_TYPE=en_US.UTF-8
+    volumes:
+      - ./volumes/postgres/jiradb/data:/var/lib/postgresql/data
+    network_mode: bridge
+    networks: 
+      - cicd
 
+  jira:
+    image: atlassian/jira-software
+    container_name: jira
+    restart: always
+    environment:
+      - ATL_JDBC_URL=jdbc:postgresql://jiradb:5432/jiradb
+      - ATL_JDBC_USER=jira
+      - ATL_JDBC_PASSWORD=jira
+      - ATL_DB_DRIVER=org.postgresql.Driver
+      - ATL_DB_TYPE=postgresql
+      - JVM_MINIMUM_MEMORY=1024m
+      - JVM_MAXIMUM_MEMORY=1024m
+    volumes:
+      - jiraVolume:/var/atlassian/application-data/jira
+      - jiraInstallVolume:/opt/atlassian/
+    ports:
+      - 8080:8080
+    network_mode: bridge
+    networks: 
+      - cicd
+    depends_on:
+      - jiradb
+    
+  
+  bibucketdb:
+    image: postgres:11
+    container_name: bitbucketdb
+    environment:
+      - POSTGRES_PASSWORD=bitbucket
+      - POSTGRES_DB=bitbucketdb
+      - POSTGRES_USER=bitbucket
+      - POSTGRES_ENCODING=UNICODE
+      - POSTGRES_COLLATE=en_US.UTF-8
+      - POSTGRES_COLLATE_TYPE=en_US.UTF-8
+    volumes:
+      - ./volumes/postgres/bitbucketdb/data:/var/lib/postgresql/data
+    network_mode: bridge
+    networks: 
+      - cicd
 
   bitbucket:
     image: atlassian/bitbucket-server
@@ -85,22 +112,64 @@ services:
     ports:
       - 7990:7990
     network_mode: bridge
+    networks: 
+      - cicd
+    depends_on:
+      - bibucketdb
 
 
-  bibucketdb:
-    iimage: postgres:11
+  sonarqube:
+    image: sonarqube
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
     environment:
-      - POSTGRES_PASSWORD=bitbucket
-      - POSTGRES_DB=bitbucketdb
-      - POSTGRES_USER=bitbucket
+      - sonar.jdbc.url=jdbc:postgresql://sonardb:5432/sonardb
+    volumes:
+      - sonarConfVolume:/opt/sonarqube/conf
+      - sonarDataVolume:/opt/sonarqube/data
+      - sonarExtensionsVolume:/opt/sonarqube/extensions
+    network_mode: bridge
+    networks: 
+      - cicd
+
+  postgres:
+    image: postgres
+    container_name: sonardb
+    environment:
+      - POSTGRES_PASSWORD=sonar
+      - POSTGRES_DB=sonardb
+      - POSTGRES_USER=sonar
       - POSTGRES_ENCODING=UNICODE
       - POSTGRES_COLLATE=en_US.UTF-8
       - POSTGRES_COLLATE_TYPE=en_US.UTF-8
     volumes:
-      - ./volumes/postgres/bitbucketdb/data:/var/lib/postgresql/data
-    network: bridge
-  
+      - ./volumes/postgres/sonardb/data:/var/lib/postgresql/data
+    network_mode: bridge
+    networks: 
+      - cicd
 
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    restart: always
+    ports:
+      - 8181:8181
+      - 50000:50000
+    volumes:
+      - jenkinsVolume:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    network_mode: bridge
+    networks: 
+      - cicd
+    depends_on:
+      - sonarqube
+
+
+networks:
+  cicd:
+    driver: bridge
 
 volumes:
   jiraVolume:
@@ -109,3 +178,7 @@ volumes:
   confluenceInstallVolume:
   bitbucketVolume:
   bitbucketInstallVolume:
+  sonarConfVolume:
+  sonarDataVolume:
+  sonarExtensionsVolume:
+  jenkinsVolume:
