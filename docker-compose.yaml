@@ -1,9 +1,155 @@
 version: '2'
+
+
 services:
 
+  # CONFLUENCE
+  confluencedb:
+    image: postgres:11
+    container_name: confluencedb
+    environment:
+      - POSTGRES_PASSWORD=confluence
+      - POSTGRES_DB=confluencedb
+      - POSTGRES_USER=confluence
+      - POSTGRES_ENCODING=UNICODE
+      - POSTGRES_COLLATE=en_US.UTF-8
+      - POSTGRES_COLLATE_TYPE=en_US.UTF-8
+    volumes:
+      - ./volumes/postgres/confluencedb/data:/var/lib/postgresql/data
+    networks: 
+      - cicd
+  
+  confluence:
+    image: atlassian/confluence-server
+    container_name: confluence
+    restart: always
+    environment:
+      - ATL_JDBC_URL=jdbc:postgresql://confluencedb:5432/confluencedb
+      - ATL_JDBC_USER=confluence
+      - ATL_JDBC_PASSWORD=confluence
+      - ATL_DB_DRIVER=org.postgresql.Driver
+      - ATL_DB_TYPE=postgresql
+      - JVM_MINIMUM_MEMORY=1024m
+      - JVM_MAXIMUM_MEMORY=1024m
+    volumes:
+      - confluenceVolume:/var/atlassian/application-data/confluence
+      - confluenceInstallVolume:/opt/atlassian/
+    ports:
+      - 8090:8090
+    networks: 
+      - cicd
+    depends_on:
+      - confluencedb
+
+  # JIRA
+  jiradb:
+    image: postgres:11
+    container_name: jiradb
+    environment:
+      - POSTGRES_PASSWORD=jira
+      - POSTGRES_DB=jiradb
+      - POSTGRES_USER=jira
+      - POSTGRES_ENCODING=UNICODE
+      - POSTGRES_COLLATE=en_US.UTF-8
+      - POSTGRES_COLLATE_TYPE=en_US.UTF-8
+    volumes:
+      - ./volumes/postgres/jiradb/data:/var/lib/postgresql/data
+    networks: 
+      - cicd
+
+  jira2:
+    image: atlassian/jira-software
+    container_name: jira2
+    restart: always
+    environment:
+      - ATL_JDBC_URL=jdbc:postgresql://jiradb:5432/jiradb
+      - ATL_JDBC_USER=jira
+      - ATL_JDBC_PASSWORD=jira
+      - ATL_DB_DRIVER=org.postgresql.Driver
+      - ATL_DB_TYPE=postgres72
+      - JVM_MINIMUM_MEMORY=1024m
+      - JVM_MAXIMUM_MEMORY=1024m
+    volumes:
+      - jira2Volume:/var/atlassian/application-data/jira
+      - jira2InstallVolume:/opt/atlassian/
+    ports:
+      - 8080:8080
+    networks: 
+      - cicd
+    depends_on:
+      - jiradb
+    
+  # BITBCUKET
+  bibucketdb:
+    image: postgres:11
+    container_name: bitbucketdb
+    environment:
+      - POSTGRES_PASSWORD=bitbucket
+      - POSTGRES_DB=bitbucketdb
+      - POSTGRES_USER=bitbucket
+      - POSTGRES_ENCODING=UNICODE
+      - POSTGRES_COLLATE=en_US.UTF-8
+      - POSTGRES_COLLATE_TYPE=en_US.UTF-8
+    volumes:
+      - ./volumes/postgres/bitbucketdb/data:/var/lib/postgresql/data
+    networks: 
+      - cicd
+
+  bitbucket:
+    image: atlassian/bitbucket-server
+    container_name: bitbucket
+    restart: always
+    environment:
+      - JDBC_DRIVER=org.postgresql.Driver
+      - JDBC_URL=jdbc:postgresql://bitbucketdb:5432/bitbucketdb
+      - JDBC_USER=bitbucket
+      - JDBC_PASSWORD=bitbucket
+    volumes:
+      - bitbucketVolume:/var/atlassian/application-data/bitbucket
+      - bitbucketInstallVolume:/opt/atlassian/
+    ports:
+      - 7990:7990
+    networks: 
+      - cicd
+    depends_on:
+      - bibucketdb
+
+
+  # SONARQUBE
+  sonarqube:
+    image: sonarqube
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      - sonar.jdbc.url=jdbc:postgresql://sonardb:5432/sonardb
+    volumes:
+      - sonarConfVolume:/opt/sonarqube/conf
+      - sonarDataVolume:/opt/sonarqube/data
+      - sonarExtensionsVolume:/opt/sonarqube/extensions
+    networks: 
+      - cicd
+
+  postgres:
+    image: postgres
+    container_name: sonardb
+    environment:
+      - POSTGRES_PASSWORD=sonar
+      - POSTGRES_DB=sonardb
+      - POSTGRES_USER=sonar
+      - POSTGRES_ENCODING=UNICODE
+      - POSTGRES_COLLATE=en_US.UTF-8
+      - POSTGRES_COLLATE_TYPE=en_US.UTF-8
+    volumes:
+      - ./volumes/postgres/sonardb/data:/var/lib/postgresql/data
+    networks: 
+      - cicd
+
+
+  # JENKINS
   jenkins:
     image: jenkins/jenkins:lts
-    container_name: jenkins2
+    container_name: jenkins
     restart: always
     ports:
       - 8888:8080
@@ -13,6 +159,21 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     networks: 
       - cicd
+    depends_on:
+      - sonarqube
+
+
+  # NEXUS
+  nexus:
+    hostname: nexus
+    image: sonatype/nexus3
+    container_name: nexus
+    ports:
+      - 8081:8081
+    volumes:
+      - nexusVolume:/nexus-data sonatype/nexus3
+    networks:
+      - cicd
 
 
 networks:
@@ -20,14 +181,14 @@ networks:
     driver: bridge
 
 volumes:
-  #jira2Volume:
-  #jira2InstallVolume:
-  #confluenceVolume:
-  #confluenceInstallVolume:
-  #bitbucketVolume:
-  #bitbucketInstallVolume:
-  #sonarConfVolume:
-  #sonarDataVolume:
-  #sonarExtensionsVolume:
+  jira2Volume:
+  jira2InstallVolume:
+  confluenceVolume:
+  confluenceInstallVolume:
+  bitbucketVolume:
+  bitbucketInstallVolume:
+  sonarConfVolume:
+  sonarDataVolume:
+  sonarExtensionsVolume:
   jenkins2Volume:
-  #nexusVolume:
+  nexusVolume:
